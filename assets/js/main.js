@@ -6,7 +6,7 @@ $(document).ready(function() {
 
 
 function dropDownDataType(){
-    var types = [{"type":"CSV","message":"Put in your header + a few hundred records to make a quick schema","default":true},{"type":"JSON (Soon)","message":"Not Yet","default":false},{"type":"XML (Soon)","message":"Not Yet","default":false}];
+    var types = [{"type":"CSV","message":"Put in your header + a few hundred records to make a quick schema","default":true,"sample":""},{"type":"JSON","message":"Not Yet","default":false},{"type":"XML (Soon)","message":"Not Yet","default":false}];
     $.each(types,function( key, value ) {
         $('#data-type').append($("<option></option>").attr("value",key).text(value.type));
     });
@@ -31,6 +31,7 @@ function readSampleData(){
             break;
         case 1:
             alert('No JSON Yet');
+            //jsonMakeECL(sampleData)
             break;
         case 2:
             alert('No XML Yet');
@@ -85,12 +86,48 @@ function csvMakeECL(csvJsArray){
      var ecl = '';
      for(var a in header_counter_array){
          var type_ecl = 'STRING';
-         if(header_counter_array[a].strings === 0 && header_counter_array[a].numbers > 0){ type_ecl = 'INT';}
+         if(header_counter_array[a].strings === 0 && header_counter_array[a].numbers > 0){ type_ecl = 'INTEGER';}
          ecl = ecl + '       ' + type_ecl + variableLengthCheck(header_counter_array[a].counter) + '  '+ cleanUpName(a) + '; \r\n';
      }     
     ecl = ecl_bookends($('#schema-name').val(),ecl);
     $('#ecl-schema').val(ecl);
 }
+
+
+function variableLengthCheck(number){
+    if(number === 0){return '{???}';}else{ return number;}
+}
+
+function jsonMakeECL(json){
+    var obj = jQuery.parseJSON(json);
+    
+     var j_array = new Array();
+
+    for (var a in obj){    
+    console.log(typeOf(obj[a]));
+    
+    if(typeOf(obj[a]) === "string"){
+        
+        var l_array = new Array();
+        
+        l_array["Type"] = "string";
+        l_array["Size"] = obj[a].length;             
+        j_array[a] = l_array;
+
+    }
+      if(typeOf(obj[a]) === "number"){
+          
+        var l_array = new Array();
+        l_array["Type"] = "number";
+        var value1 = String(obj[a]);
+        l_array["Size"] = value1.length;             
+        j_array[a] = l_array;
+      }
+    
+    }
+    console.log(j_array)
+}
+
 
 function cleanUpName(string){
     string = string.toLowerCase().replace(/^(.)|\s(.)/g, function($1) { return $1.toUpperCase(); });
@@ -103,8 +140,4 @@ function ecl_bookends(schema_name,ecl_string){
      ecl = ecl + ecl_string;
      ecl = ecl + '  END;'; 
     return ecl;
-}
-
-function variableLengthCheck(number){
-    if(number === 0){return '{???}';}else{ return number;}
 }
