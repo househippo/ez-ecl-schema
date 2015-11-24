@@ -2,6 +2,8 @@ function typeOf (obj) { return {}.toString.call(obj).split(' ')[1].slice(0, -1).
 function isDecimal(decimal1){return /^[-+]?[0-9]+\.[0-9]+$/.test(decimal1);}
 function isFloat(float1){}
 
+debug = false;
+
 $(document).ready(function() {
     dropDownDataType();
 });
@@ -45,15 +47,11 @@ function readSampleData(){
 }
 
 function csvMakeECL(stringData){
-    var csvJsArray = Papa.parse(stringData,{dynamicTyping:true});
-     var header_data = csvJsArray.data[0];
-     //console.log(header_data);
-    
-     var header_counter = new Object();
+      var csvJsArray = Papa.parse(stringData,{dynamicTyping:true});
+      var header_data = csvJsArray.data[0];
+      var header_counter = new Object();
       var header_counter_array = new Array();
-      
-      console.log(csvJsArray)
-     
+      if(debug === true){console.log(csvJsArray);}
           $.each(csvJsArray.data[0],function(key,value){
               header_counter[value] = 0;
               //console.log(key)
@@ -72,8 +70,6 @@ function csvMakeECL(stringData){
          if(key !== 0){
             $.each(value,function(key2,value2){
                         var element_name_1 = Object.keys(header_counter_array)[key2];
-                        //console.log(element_name_1)
-                        //console.log(typeOf(value2));
                         var value_length = String(value2).length;
                         
                         if(value_length > header_counter_array[element_name_1].counter){header_counter_array[element_name_1].counter = value_length;}
@@ -90,32 +86,31 @@ function csvMakeECL(stringData){
          }
      });
      
-     console.log(header_counter_array)
+     if(debug === true){console.log(header_counter_array);}
      var ecl = '';
      for(var a in header_counter_array){
-         var type_ecl = 'STRING';
+         
+         if(debug === true){console.log(a);}
+         var type_ecl = '';
          if(header_counter_array[a].strings === 0 && header_counter_array[a].numbers > 0){
-             switch (header_counter_array[a].numberType){
-             case 'decimal':
+           if(header_counter_array[a].numberType === 'decimal'){
                 type_ecl = 'DECIMAL';
                 ecl = ecl + '       ' + type_ecl + variableLengthCheck(header_counter_array[a].counter) + '  '+ cleanUpName(a) + '; \r\n';
-                break;
-            default:
-            case 'interger':
+            }else{
                type_ecl = 'INTEGER';
-               ecl = ecl + '       ' + type_ecl + integerSize(header_counter_array[a].counter) + '  '+ cleanUpName(a) + '; \r\n';
-               break;  
-            }   
-         }
+               ecl = ecl + '       ' + type_ecl + integerSize(header_counter_array[a].counter) + '  '+ cleanUpName(a) + '; \r\n'; 
+            }
+         }else{
+         type_ecl = 'STRING';
          ecl = ecl + '       ' + type_ecl + variableLengthCheck(header_counter_array[a].counter) + '  '+ cleanUpName(a) + '; \r\n';
+         }
+         
      }     
     ecl = ecl_bookends($('#schema-name').val(),ecl);
     $('#ecl-schema').val(ecl);
 }
 
-function variableLengthCheck(number){
-    if(number === 0){return '{???}';}else{ return number;}
-}
+function variableLengthCheck(number){ if(number === 0){return '{???}';}else{ return number;}}
 
 function integerSize(size){  
     var size = Math.abs(size);
@@ -136,7 +131,7 @@ function jsonMakeECL(json){
      var j_array = new Array();
 
     for (var a in obj){    
-    console.log(typeOf(obj[a]));
+    if(debug === true){console.log(typeOf(obj[a]));}
     
     if(typeOf(obj[a]) === "string"){
         
@@ -160,15 +155,15 @@ function jsonMakeECL(json){
     console.log(j_array)
 }
 
-
 function cleanUpName(string){
-    string = string.toLowerCase().replace(/^(.)|\s(.)/g, function($1) { return $1.toUpperCase(); });
-    string = string.replace(/ /g, '_');
+    //string = string.toLowerCase().replace(/^(.)|\s(.)/g, function($1) { return $1.toUpperCase(); });
+    //string = string.replace(/ /g, '_');
+    string = string.replace(/ /g, '_').toLowerCase();
     return string.replace(/[^A-Za-z_0-9]/g,''); //except letters & "_"
 }
 
 function ecl_bookends(schema_name,ecl_string){
-     var ecl = cleanUpName(String(schema_name)) + ' := RECORD\r\n';
+     var ecl = String(schema_name).trim() + ' := RECORD\r\n';
      ecl = ecl + ecl_string;
      ecl = ecl + '  END;'; 
     return ecl;
