@@ -1,7 +1,7 @@
 EZ-ECL-Schema
 =============
 
-Sometime making an ECL schema can me a very tedious process.
+Sometime making an ECL schema can be a very tedious process.
 I made this quick tool to do 90 - 95% of the work of making a schema.
 
 1. Just paste in a small sample of your CSV file. 
